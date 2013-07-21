@@ -102,6 +102,21 @@ DEFINE_FUNCTION SNAPI_InitDataFromString(_SNAPI_DATA snapiData, CHAR snapiString
 
 DEFINE_FUNCTION SNAPI_SendDataToDevice(DEV device, CHAR cmd[], CHAR params[][]) {
     STACK_VAR CHAR commandToSend[255]
+    STACK_VAR INTEGER n
+    STACK_VAR INTEGER paramCount
+    
+    paramCount = 0
+    
+    for(n = 1; n <= MAX_LENGTH_ARRAY(params); n ++) {
+	if(LENGTH_STRING(params[n])) {
+	    paramCount ++
+	} else {
+	    break
+	}
+    }
+    
+    SET_LENGTH_ARRAY(params, paramCount)
+    
     commandToSend = DuetPackCmdHeader(cmd)
     commandToSend = DuetPackCmdParamArray(commandToSend, params)
     SEND_COMMAND device, commandToSend
