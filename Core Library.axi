@@ -100,6 +100,17 @@ DEFINE_FUNCTION SNAPI_InitDataFromString(_SNAPI_DATA snapiData, CHAR snapiString
     snapiData.numberOfParams = LENGTH_ARRAY(snapiData.param)
 }
 
+DEFINE_FUNCTION SNAPI_Debug(_SNAPI_DATA snapi) {
+    STACK_VAR INTEGER n
+    
+    DebugAddDataToArray("'SNAPI Debug (', snapi.cmd, ')'", 'snapi.cmd', snapi.cmd)
+    DebugAddDataToArray("'SNAPI Debug (', snapi.cmd, ')'", 'snapi.numberOfParams', ItoA(snapi.numberOfParams))
+    for(n = 1; n <= snapi.numberOfParams; n ++) {
+	DebugAddDataToArray("'SNAPI Debug (', snapi.cmd, ')'", "'snapi.param[', ItoA(n), ']'", snapi.param[n])
+    }
+    DebugSendArrayToConsole("'SNAPI Debug (', snapi.cmd, ')'")
+}
+
 DEFINE_FUNCTION SNAPI_SendDataToDevice(DEV device, CHAR cmd[], CHAR params[][]) {
     STACK_VAR CHAR commandToSend[255]
     STACK_VAR INTEGER n
