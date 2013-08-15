@@ -133,6 +133,14 @@ DEFINE_FUNCTION SNAPI_SendDataToDevice(DEV device, CHAR cmd[], CHAR params[][]) 
     SEND_COMMAND device, commandToSend
 }
 
+DEFINE_FUNCTION SNAPI_InitParams(CHAR paramArray[][]) {
+    STACK_VAR INTEGER n
+    
+    for(n = 1; n <= MAX_LENGTH_ARRAY(paramArray); n ++) {
+	paramArray[n] = ''
+    }
+}
+
 DEFINE_FUNCTION INTEGER DuetParseParamsToArray(CHAR paramString[], CHAR paramArray[][]) {
     STACK_VAR INTEGER n
     STACK_VAR INTEGER result
@@ -567,6 +575,10 @@ DEFINE_FUNCTION INTEGER DebugAddDataToArray(CHAR key[50], CHAR header[50], CHAR 
 	}
     }
     return result
+}
+
+DEFINE_FUNCTION INTEGER DebugAddNumberToArray(CHAR key[50], CHAR header[50], INTEGER number) {
+    DebugAddDataToArray(key, header, ItoA(number))
 }
 
 DEFINE_FUNCTION CHAR[255] DebugPadTextRight(CHAR text[255], INTEGER padding) {
