@@ -577,6 +577,10 @@ DEFINE_FUNCTION INTEGER DebugAddDataToArray(CHAR key[50], CHAR header[50], CHAR 
     return result
 }
 
+DEFINE_FUNCTION INTEGER DebugAddNumberToArray(CHAR key[50], CHAR header[50], INTEGER number) {
+    DebugAddDataToArray(key, header, ItoA(number))
+}
+
 DEFINE_FUNCTION CHAR[255] DebugPadTextRight(CHAR text[255], INTEGER padding) {
     STACK_VAR INTEGER pos
     STACK_VAR CHAR result[255]
