@@ -77,6 +77,7 @@ STRUCT _SNAPI_DATA {
     CHAR cmd[DUET_MAX_CMD_LEN]
     CHAR param[DUET_MAX_PARAM_ARRAY_SIZE][DUET_MAX_PARAM_LEN]
     INTEGER numberOfParams
+    DEV device
 }
 
 DEFINE_FUNCTION SNAPI_InitData(_SNAPI_DATA snapiData) {
@@ -90,6 +91,18 @@ DEFINE_FUNCTION SNAPI_InitData(_SNAPI_DATA snapiData) {
     snapiData.numberOfParams = 0
 }
 
+DEFINE_FUNCTION SNAPI_InitDataFromDevice(_SNAPI_DATA snapiData, DEV device, CHAR snapiString[]) {
+    STACK_VAR INTEGER n
+    STACK_VAR CHAR param[DUET_MAX_PARAM_LEN]
+    
+    SNAPI_InitData(snapiData)
+    snapiData.device = device
+    snapiData.cmd = DuetParseCmdHeader(snapiString)
+    DuetParseParamsToArray(snapiString, snapiData.param)
+    snapiData.numberOfParams = LENGTH_ARRAY(snapiData.param)
+}
+
+// This is now deprecated - user SNAPI_InitDataFromDevice()
 DEFINE_FUNCTION SNAPI_InitDataFromString(_SNAPI_DATA snapiData, CHAR snapiString[]) {
     STACK_VAR INTEGER n
     STACK_VAR CHAR param[DUET_MAX_PARAM_LEN]
@@ -103,8 +116,9 @@ DEFINE_FUNCTION SNAPI_InitDataFromString(_SNAPI_DATA snapiData, CHAR snapiString
 DEFINE_FUNCTION SNAPI_Debug(_SNAPI_DATA snapi) {
     STACK_VAR INTEGER n
     
+    DebugAddDataToArray("'SNAPI Debug (', snapi.cmd, ')'", 'snapi.device', DeviceToString(snapi.device))
     DebugAddDataToArray("'SNAPI Debug (', snapi.cmd, ')'", 'snapi.cmd', snapi.cmd)
-    DebugAddDataToArray("'SNAPI Debug (', snapi.cmd, ')'", 'snapi.numberOfParams', ItoA(snapi.numberOfParams))
+    DebugAddNumberToArray("'SNAPI Debug (', snapi.cmd, ')'", 'snapi.numberOfParams', snapi.numberOfParams)
     for(n = 1; n <= snapi.numberOfParams; n ++) {
 	DebugAddDataToArray("'SNAPI Debug (', snapi.cmd, ')'", "'snapi.param[', ItoA(n), ']'", snapi.param[n])
     }
