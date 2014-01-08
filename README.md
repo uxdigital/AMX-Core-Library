@@ -1,6 +1,10 @@
 AMX-Core-Library
 ================
 
+Development Branch
+----------------
+- Changes to DEBUG functions to reduce storage when disabled
+
 v1.07
 ----------------
 - Now out of Beta

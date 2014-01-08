@@ -25,12 +25,15 @@ PROGRAM_NAME='Core Library'
 (*                                                                             *)
 (*******************************************************************************)
 (*                                                                             *)
-(*                           Core Library v1-07                                *)
+(*                         Core Library v2 (Beta)                              *)
 (*                                                                             *)
 (*            Written by Mike Jobson (Control Designs Software Ltd)            *)
 (*                                                                             *)
 (** REVISION HISTORY ***********************************************************)
 (*                                                                             *)
+(*  v2-0 (beta)                                                                *)
+(*  Changes to DEBUG functions to reduce storage when disabled                 *)
+(*       --------------------------------------------------------------        *)
 (*  v1-07                                                                      *)
 (*  SNAPI processing improvements. Added 'SNAPI_InitDataFromDevice()'          *)
 (*  function to include device addressing in the _SNAPI data type              *)
@@ -189,8 +192,14 @@ DEFINE_CONSTANT
 
 INTEGER ROOM_NAME_MAX_LENGTH					= 50
 
-INTEGER DEBUG_ARRAY_MAX_SIZE					= 10
-INTEGER DEBUG_ARRAY_DATA_LOG_MAX_SIZE				= 50
+// Changed to smaller storage sizes and so we can overide if needed
+#IF_NOT_DEFINED DEBUG_ARRAY_MAX_SIZE
+INTEGER DEBUG_ARRAY_MAX_SIZE					= 2
+#END_IF
+
+#IF_NOT_DEFINED DEBUG_ARRAY_DATA_LOG_MAX_SIZE
+INTEGER DEBUG_ARRAY_DATA_LOG_MAX_SIZE				= 10
+#END_IF
 
 INTEGER MAX_STRING_LENGTH_FROM_DEVICE				= 1000
 
@@ -211,6 +220,8 @@ STRUCT _TIME {
     SINTEGER seconds
 }
 
+#IF_DEFINED DEBUG
+
 STRUCT _DEBUG_ENTRY {
     INTEGER id
     CHAR dataString[255]
@@ -228,11 +239,11 @@ STRUCT _DEBUGDATA {
     INTEGER maxHeaderLength
 }
 
-
-
 DEFINE_VARIABLE
 
 VOLATILE _DEBUGDATA debugDataArray[DEBUG_ARRAY_MAX_SIZE]
+
+#END_IF
 
 DEFINE_FUNCTION TimeTypeInit(_TIME t) {
     t.day = 1
@@ -526,6 +537,7 @@ DEFINE_FUNCTION INTEGER TimeMatches(_TIME t1, _TIME t2) {
     return result
 }
 
+#IF_DEFINED DEBUG
 
 DEFINE_FUNCTION INTEGER DebugFindkeyInArray(CHAR key[50]) {
     STACK_VAR INTEGER result
@@ -569,38 +581,44 @@ DEFINE_FUNCTION INTEGER DebugFindIndexOfArrayFromID(INTEGER id) {
     return result
 }
 
+#END_IF
+
 DEFINE_FUNCTION INTEGER DebugAddDataToArray(CHAR key[50], CHAR header[50], CHAR dataString[255]) {
     STACK_VAR INTEGER result
     STACK_VAR INTEGER arrayIndex
     STACK_VAR INTEGER n
-
+    
+    #IF_DEFINED DEBUG
+    
     result = 0
     result = DebugFindkeyInArray(key)
-    if(DEBUG) {
-	if(!result) {
-	    result = DebugFindNextEmptyArray()
-	    if(result) {
-		arrayIndex = DebugFindIndexOfArrayFromID(result)
-		TimeCreate(debugDataArray[arrayIndex].createTime)
-		debugDataArray[arrayIndex].key = key
-	    }
-	}
+    
+    if(!result) {
+	result = DebugFindNextEmptyArray()
 	if(result) {
 	    arrayIndex = DebugFindIndexOfArrayFromID(result)
-	    for(n = 1; n <= MAX_LENGTH_ARRAY(debugDataArray[arrayIndex].logEntry); n ++) {
-		if(debugDataArray[arrayIndex].logEntry[n].dataString == '') {
-		    debugDataArray[arrayIndex].logEntry[n].dataString = dataString
-		    TimeCreate(debugDataArray[arrayIndex].logEntry[n].entryTime)
-		    debugDataArray[arrayIndex].logEntry[n].header = header
-		    debugDataArray[arrayIndex].logEntry[n].headerLength = LENGTH_STRING(header)
-		    if(debugDataArray[arrayIndex].maxHeaderLength < debugDataArray[arrayIndex].logEntry[n].headerLength) {
-			debugDataArray[arrayIndex].maxHeaderLength = debugDataArray[arrayIndex].logEntry[n].headerLength
-		    }
-		    break
+	    TimeCreate(debugDataArray[arrayIndex].createTime)
+	    debugDataArray[arrayIndex].key = key
+	}
+    }
+    if(result) {
+	arrayIndex = DebugFindIndexOfArrayFromID(result)
+	for(n = 1; n <= MAX_LENGTH_ARRAY(debugDataArray[arrayIndex].logEntry); n ++) {
+	    if(debugDataArray[arrayIndex].logEntry[n].dataString == '') {
+		debugDataArray[arrayIndex].logEntry[n].dataString = dataString
+		TimeCreate(debugDataArray[arrayIndex].logEntry[n].entryTime)
+		debugDataArray[arrayIndex].logEntry[n].header = header
+		debugDataArray[arrayIndex].logEntry[n].headerLength = LENGTH_STRING(header)
+		if(debugDataArray[arrayIndex].maxHeaderLength < debugDataArray[arrayIndex].logEntry[n].headerLength) {
+		    debugDataArray[arrayIndex].maxHeaderLength = debugDataArray[arrayIndex].logEntry[n].headerLength
 		}
+		break
 	    }
 	}
     }
+    
+    #END_IF
+    
     return result
 }
 
@@ -635,7 +653,9 @@ DEFINE_FUNCTION CHAR[255] DebugPadTextLeft(CHAR text[255], INTEGER padding) {
 DEFINE_FUNCTION DebugFormatDataHeaders(INTEGER arrayIndex) {
     STACK_VAR INTEGER n
     STACK_VAR INTEGER padding
-
+    
+    #IF_DEFINED DEBUG
+    
     if(arrayIndex) {
 	for(n = 1; n <= MAX_LENGTH_ARRAY(debugDataArray[arrayIndex].logEntry); n ++) {
 	    if(debugDataArray[arrayIndex].logEntry[n].headerLength) {
@@ -644,6 +664,8 @@ DEFINE_FUNCTION DebugFormatDataHeaders(INTEGER arrayIndex) {
 	    }
 	}
     }
+    
+    #END_IF
 }
 
 DEFINE_FUNCTION DebugSendArrayToConsole(CHAR key[50]) {
@@ -652,42 +674,44 @@ DEFINE_FUNCTION DebugSendArrayToConsole(CHAR key[50]) {
     STACK_VAR CHAR textToSend[255]
     STACK_VAR INTEGER n
     
-    if(DEBUG) {
-	id = DebugFindkeyInArray(key)
-	if(id) {
-	    arrayIndex = DebugFindIndexOfArrayFromID(id)
-	    DebugFormatDataHeaders(arrayIndex)
-	    textToSend = ''
-	    DebugSendStringToConsole(debugDataArray[arrayIndex].key)
-	    for(n = 1; n <= MAX_LENGTH_ARRAY(debugDataArray[arrayIndex].logEntry); n ++) {
-		if(LENGTH_STRING(debugDataArray[arrayIndex].logEntry[n].dataString)) {
-		    if(debugDataArray[arrayIndex].logEntry[n].headerLength) {
-			textToSend = "$20, $20, debugDataArray[arrayIndex].logEntry[n].headerPadded, $20, $20, $20, $22"
-		    }
-		    textToSend = "textToSend, debugDataArray[arrayIndex].logEntry[n].dataString"
-		    if(debugDataArray[arrayIndex].logEntry[n].headerLength) {
-			textToSend = "textToSend, $22"
-		    }
-		    SEND_STRING 0, "'     ', textToSend"
+    #IF_DEFINED DEBUG
+    
+    id = DebugFindkeyInArray(key)
+    if(id) {
+	arrayIndex = DebugFindIndexOfArrayFromID(id)
+	DebugFormatDataHeaders(arrayIndex)
+	textToSend = ''
+	DebugSendStringToConsole(debugDataArray[arrayIndex].key)
+	for(n = 1; n <= MAX_LENGTH_ARRAY(debugDataArray[arrayIndex].logEntry); n ++) {
+	    if(LENGTH_STRING(debugDataArray[arrayIndex].logEntry[n].dataString)) {
+		if(debugDataArray[arrayIndex].logEntry[n].headerLength) {
+		    textToSend = "$20, $20, debugDataArray[arrayIndex].logEntry[n].headerPadded, $20, $20, $20, $22"
 		}
+		textToSend = "textToSend, debugDataArray[arrayIndex].logEntry[n].dataString"
+		if(debugDataArray[arrayIndex].logEntry[n].headerLength) {
+		    textToSend = "textToSend, $22"
+		}
+		SEND_STRING 0, "'     ', textToSend"
 	    }
-	    //DebugSendEndStringToConsole(debugDataArray[arrayIndex].key)
-	    DebugInitStorage(arrayIndex)
 	}
+	//DebugSendEndStringToConsole(debugDataArray[arrayIndex].key)
+	DebugInitStorage(arrayIndex)
     }
+    
+    #END_IF
 }
 
 DEFINE_FUNCTION DebugSendStringToConsole(CHAR stringToSend[255]) {
-    if(DEBUG) {
-	SEND_STRING 0, "'DEBUG: ', stringToSend"
-    }
+    #IF_DEFINED DEBUG
+    SEND_STRING 0, "'DEBUG: ', stringToSend"
+    #END_IF
 }
 
 DEFINE_FUNCTION DebugSendEndStringToConsole(CHAR stringToSend[255]) {
-    if(DEBUG) {
-	SEND_STRING 0, "'DEBUG: ', stringToSend"
-	SEND_COMMAND 0, "'END'"
-    }
+    #IF_DEFINED DEBUG
+    SEND_STRING 0, "'DEBUG: ', stringToSend"
+    SEND_COMMAND 0, "'END'"
+    #END_IF
 }
 
 DEFINE_FUNCTION DebugInitStorage(INTEGER index) {
@@ -695,7 +719,9 @@ DEFINE_FUNCTION DebugInitStorage(INTEGER index) {
     STACK_VAR INTEGER y
     STACK_VAR INTEGER startIndex
     STACK_VAR INTEGER endIndex
-
+    
+    #IF_DEFINED DEBUG
+    
     startIndex = 0
     endIndex = 0
     if(index && index <= MAX_LENGTH_ARRAY(debugDataArray)) {
@@ -724,6 +750,8 @@ DEFINE_FUNCTION DebugInitStorage(INTEGER index) {
 	    }
 	}
     }
+    
+    #END_IF
 }
 
 /* STANDARD NUMBERS ********************************************************/
