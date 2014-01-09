@@ -4,6 +4,9 @@ AMX-Core-Library
 Development Branch
 ----------------
 - Changes to DEBUG functions to reduce storage when disabled
+- Debug now moved to seperate file so you can leave it out completely if needed
+- New Function: NumberArrayCount()
+- New Function: NumberFind()
 
 v1.07
 ----------------
