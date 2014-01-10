@@ -214,6 +214,18 @@ DEFINE_FUNCTION DebugSendEndStringToConsole(CHAR stringToSend[255]) {
     #END_IF
 }
 
+DEFINE_FUNCTION SNAPI_Debug(_SNAPI_DATA snapi) {
+    STACK_VAR INTEGER n
+    
+    DebugAddDataToArray("'SNAPI Debug (', snapi.cmd, ')'", 'snapi.device', DeviceToString(snapi.device))
+    DebugAddDataToArray("'SNAPI Debug (', snapi.cmd, ')'", 'snapi.cmd', snapi.cmd)
+    DebugAddNumberToArray("'SNAPI Debug (', snapi.cmd, ')'", 'snapi.numberOfParams', snapi.numberOfParams)
+    for(n = 1; n <= snapi.numberOfParams; n ++) {
+	DebugAddDataToArray("'SNAPI Debug (', snapi.cmd, ')'", "'snapi.param[', ItoA(n), ']'", snapi.param[n])
+    }
+    DebugSendArrayToConsole("'SNAPI Debug (', snapi.cmd, ')'")
+}
+
 #IF_DEFINED DEBUG
     
 DEFINE_FUNCTION DebugInitStorage(INTEGER index) {
@@ -250,19 +262,6 @@ DEFINE_FUNCTION DebugInitStorage(INTEGER index) {
 	    }
 	}
     }
-}
-
-
-DEFINE_FUNCTION SNAPI_Debug(_SNAPI_DATA snapi) {
-    STACK_VAR INTEGER n
-    
-    DebugAddDataToArray("'SNAPI Debug (', snapi.cmd, ')'", 'snapi.device', DeviceToString(snapi.device))
-    DebugAddDataToArray("'SNAPI Debug (', snapi.cmd, ')'", 'snapi.cmd', snapi.cmd)
-    DebugAddNumberToArray("'SNAPI Debug (', snapi.cmd, ')'", 'snapi.numberOfParams', snapi.numberOfParams)
-    for(n = 1; n <= snapi.numberOfParams; n ++) {
-	DebugAddDataToArray("'SNAPI Debug (', snapi.cmd, ')'", "'snapi.param[', ItoA(n), ']'", snapi.param[n])
-    }
-    DebugSendArrayToConsole("'SNAPI Debug (', snapi.cmd, ')'")
 }
 
 DEFINE_START {

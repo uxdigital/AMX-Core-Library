@@ -1,5 +1,8 @@
 AMX-Core-Library
 ================
+v2.0.01 Beta
+----------------
+- Hotfix for SNAPI_Debug not showing when DEBUG not defined
 
 v2.0 Beta
 ----------------
