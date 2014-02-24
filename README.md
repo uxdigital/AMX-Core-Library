@@ -1,28 +1,3 @@
-AMX-Core-Library
-================
-v2.0.01 Beta
-----------------
-- Hotfix for SNAPI_Debug not showing when DEBUG not defined
+This project has moved to a new site:
 
-v2.0 Beta
-----------------
-- Changes to DEBUG functions to reduce storage when disabled
-- Debug now moved to seperate file so you can leave it out completely if needed
-- New Function: NumberArrayCount()
-- New Function: NumberFind()
-
-v1.07
-----------------
-- Now out of Beta
-- SNAPI processing improvements. Added 'SNAPI_InitDataFromDevice()' function to include device addressing in the _SNAPI data type
-
-v1.06
-----------------
-
-- Debugging for SNAPI now reports the device
-- DebugAddNumberToArray() function added to add integer values in debugging
-- SNAPI_InitParams() for initialising param arrays for sending SNAPI type commands
-
-v1.05
-----------------
-- SNAPI_Debug() function to send the SNAPI processing to the console
+    http://git.controldesigns.co.uk/control-designs/amx-core-library.git
